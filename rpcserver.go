@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -2581,6 +2582,12 @@ func handleGetRawMempool(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	// The response is simply an array of the transaction hashes if the
 	// verbose flag is not set.
 	descs := mp.TxDescs()
+
+	// NOTE: 1F47E patch
+	// order transactions by time
+	sort.Slice(descs, func(i, j int) bool {
+		return descs[i].Added.Unix() < descs[j].Added.Unix()
+	})
 	hashStrings := make([]string, len(descs))
 	for i := range hashStrings {
 		hashStrings[i] = descs[i].Tx.Hash().String()
