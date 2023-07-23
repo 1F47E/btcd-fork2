@@ -2584,9 +2584,9 @@ func handleGetRawMempool(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	descs := mp.TxDescs()
 
 	// NOTE: 1F47E patch
-	// order transactions by time
+	// keep txs list always ordered. Order by time desc
 	sort.Slice(descs, func(i, j int) bool {
-		return descs[i].Added.Unix() < descs[j].Added.Unix()
+		return descs[i].Added.UnixNano() < descs[j].Added.UnixNano()
 	})
 	hashStrings := make([]string, len(descs))
 	for i := range hashStrings {
