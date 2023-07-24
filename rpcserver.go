@@ -2602,15 +2602,20 @@ func handleGetRawMempool(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	type poolTx struct {
 		Txid     string `json:"txid"`
 		Time     int64  `json:"time"`
+		Size     int32  `json:"size"`
+		Vsize    int32  `json:"vsize"`
 		Weight   int32  `json:"weight"`
 		Fee      int64  `json:"fee"`
 		FeePerKB int64  `json:"fee_kb"`
 	}
+
 	ret := make([]poolTx, 0)
 	for _, tx := range descs {
 		t := poolTx{
 			Txid:     tx.Tx.Hash().String(),
 			Time:     tx.Added.Unix(),
+			Size:     int32(tx.Tx.MsgTx().SerializeSize()),
+			Vsize:    int32(mempool.GetTxVirtualSize(tx.Tx)),
 			Weight:   int32(blockchain.GetTransactionWeight(tx.Tx)),
 			Fee:      tx.Fee,
 			FeePerKB: tx.FeePerKB,
