@@ -21,7 +21,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -2585,20 +2584,35 @@ func handleGetRawMempool(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 
 	// NOTE: 1F47E patch
 	// keep txs list always ordered. Order by time desc
-	sort.Slice(descs, func(i, j int) bool {
-		t1 := descs[i].Added.Unix()
-		t2 := descs[j].Added.Unix()
-		if t1 == t2 {
-			return descs[i].Tx.Hash().String() < descs[j].Tx.Hash().String()
-		}
-		return t1 > t2
-	})
-	hashStrings := make([]string, len(descs))
-	for i := range hashStrings {
-		hashStrings[i] = descs[i].Tx.Hash().String()
+	// sort.Slice(descs, func(i, j int) bool {
+	// 	t1 := descs[i].Added.Unix()
+	// 	t2 := descs[j].Added.Unix()
+	// 	if t1 == t2 {
+	// 		return descs[i].Tx.Hash().String() < descs[j].Tx.Hash().String()
+	// 	}
+	// 	return t1 > t2
+	// })
+	// hashStrings := make([]string, len(descs))
+	// for i := range hashStrings {
+	// 	hashStrings[i] = descs[i].Tx.Hash().String()
+	// }
+
+	// debug
+	// custom response testing
+	ret := make([]map[string]string, 0)
+	for _, tx := range descs {
+		weight := int32(blockchain.GetTransactionWeight(tx.Tx))
+
+		ret = append(ret, map[string]string{
+			"txid":       tx.Tx.Hash().String(),
+			"time":       fmt.Sprintf("%d", tx.Added.Unix()),
+			"weight":     fmt.Sprintf("%d", weight),
+			"fee":        fmt.Sprintf("%d", tx.Fee),
+			"fee_per_kb": fmt.Sprintf("%d", tx.FeePerKB),
+		})
 	}
 
-	return hashStrings, nil
+	return ret, nil
 }
 
 // handleGetRawTransaction implements the getrawtransaction command.
